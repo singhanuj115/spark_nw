@@ -1,0 +1,41 @@
+version: '3'
+
+# Run as
+# docker-compose build; docker-compose up -d
+# Check with
+# docker ps
+# Then check the logs with
+# docker logs --tail 50 $container_id
+# docker-compose images
+# docker-compose logs --tail 20 repo_name
+
+services:
+
+  postgres_db:
+    image: postgres:14.1
+    environment:   # Set up postgres database name and password
+      POSTGRES_PASSWORD: spark_nw_pw
+      POSTGRES_DB: spark_nw
+      POSTGRES_USER: root
+    ports:    # Set up ports exposed for other containers to connect to
+      - 5433:5432
+    networks:
+      - app-tier
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  python_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres_db
+    networks:
+      - app-tier
+      
+
+
+networks:
+  app-tier:
+    driver: bridge
